@@ -1,0 +1,20 @@
+{
+  "name": "assign5",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bonus.js",
+  "type": "module",
+  "scripts": {
+    "start-prod": "node Hazem omar - C48 Sat&Tues 7-10Pm (Node) Dokki -Assignment_5(Sequalize).js",
+    "start-dev": "node --watch Hazem omar - C48 Sat&Tues 7-10Pm (Node) Dokki -Assignment_5(Sequalize).js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mysql2": "^3.24.4",
+    "sequelize": "^6.37.8"
+  }
+}
