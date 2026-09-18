@@ -1,0 +1,302 @@
+// ==========================================
+// Route Assignment 7 - MongoDB
+// mongosh Solutions
+// ==========================================
+
+
+// ==========================================
+// 1. Create books collection with validation
+// ==========================================
+
+use assign6
+
+db.createCollection("books", {
+    validator: {
+        $jsonSchema: {
+            bsonType: "object",
+            required: ["title"],
+            properties: {
+                title: {
+                    bsonType: "string",
+                    minLength: 1
+                }
+            }
+        }
+    }
+})
+
+
+// ==========================================
+// 2. Create authors collection implicitly
+// ==========================================
+
+db.authors.insertOne({
+    name: "Author1",
+    nationality: "British"
+})
+
+
+// ==========================================
+// 3. Create capped logs collection
+// Size = 1 MB
+// ==========================================
+
+db.createCollection("logs", {
+    capped: true,
+    size: 1048576
+})
+
+
+// ==========================================
+// 4. Create index on books.title
+// ==========================================
+
+db.books.createIndex({
+    title: 1
+})
+
+
+// ==========================================
+// 5. Insert one book
+// ==========================================
+
+db.books.insertOne({
+    title: "Book1",
+    author: "Ali",
+    year: 1937,
+    genres: [
+        "Fantasy",
+        "Adventure"
+    ]
+})
+
+
+// ==========================================
+// 6. Insert multiple books
+// ==========================================
+
+db.books.insertMany([
+    {
+        title: "Future",
+        author: "George Orwell",
+        year: 2020,
+        genres: [
+            "Science Fiction"
+        ]
+    },
+    {
+        title: "To Kill a Mockingbird",
+        author: "Harper Lee",
+        year: 1960,
+        genres: [
+            "Classic",
+            "Fiction"
+        ]
+    },
+    {
+        title: "Brave New World",
+        author: "Aldous Huxley",
+        year: 2006,
+        genres: [
+            "Dystopian",
+            "Science Fiction"
+        ]
+    }
+])
+
+
+// ==========================================
+// 7. Insert one log
+// ==========================================
+
+db.logs.insertOne({
+    book_id: "64b5...",
+    action: "borrowed"
+})
+
+
+// ==========================================
+// 8. Update Future book year to 2022
+// ==========================================
+
+db.books.updateOne(
+    {
+        title: "Future"
+    },
+    {
+        $set: {
+            year: 2022
+        }
+    }
+)
+
+
+// ==========================================
+// 9. Find book by title
+// ==========================================
+
+db.books.findOne({
+    title: "Brave New World"
+})
+
+
+// ==========================================
+// 10. Find books between 1990 and 2010
+// ==========================================
+
+db.books.find({
+    year: {
+        $gte: 1990,
+        $lte: 2010
+    }
+})
+
+
+// ==========================================
+// 11. Find books by genre
+// ==========================================
+
+db.books.find({
+    genres: "Science Fiction"
+})
+
+
+// ==========================================
+// 12. Skip first 2, limit next 3,
+//     sort by year descending
+// ==========================================
+
+db.books.find()
+    .sort({
+        year: -1
+    })
+    .skip(2)
+    .limit(3)
+
+
+// ==========================================
+// 13. Find books where year is integer
+// ==========================================
+
+db.books.find({
+    year: {
+        $type: "int"
+    }
+})
+
+
+// ==========================================
+// 14. Exclude books with Horror
+//     or Science Fiction genres
+// ==========================================
+
+db.books.find({
+    genres: {
+        $nin: [
+            "Horror",
+            "Science Fiction"
+        ]
+    }
+})
+
+
+// ==========================================
+// 15. Delete books before year 2000
+// ==========================================
+
+db.books.deleteMany({
+    year: {
+        $lt: 2000
+    }
+})
+
+
+// ==========================================
+// 16. Aggregation 1
+// Match year > 2000
+// Sort year descending
+// ==========================================
+
+db.books.aggregate([
+    {
+        $match: {
+            year: {
+                $gt: 2000
+            }
+        }
+    },
+    {
+        $sort: {
+            year: -1
+        }
+    }
+])
+
+
+// ==========================================
+// 17. Aggregation 2
+// Match year > 2000
+// Project title, author, year only
+// ==========================================
+
+db.books.aggregate([
+    {
+        $match: {
+            year: {
+                $gt: 2000
+            }
+        }
+    },
+    {
+        $project: {
+            _id: 0,
+            title: 1,
+            author: 1,
+            year: 1
+        }
+    }
+])
+
+
+// ==========================================
+// 18. Aggregation 3
+// Unwind genres
+// ==========================================
+
+db.books.aggregate([
+    {
+        $unwind: "$genres"
+    }
+])
+
+
+// ==========================================
+// 19. Aggregation 4
+// Lookup books with logs
+// ==========================================
+
+db.books.aggregate([
+    {
+        $lookup: {
+            from: "logs",
+            let: {
+                bookId: {
+                    $toString: "$_id"
+                }
+            },
+            pipeline: [
+                {
+                    $match: {
+                        $expr: {
+                            $eq: [
+                                "$book_id",
+                                "$$bookId"
+                            ]
+                        }
+                    }
+                }
+            ],
+            as: "logs"
+        }
+    }
+])
